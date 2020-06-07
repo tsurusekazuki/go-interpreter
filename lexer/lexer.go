@@ -29,6 +29,13 @@ func (l *lexer) readChar() {
 
 func (l *lexer) NextToken() (tok token.Token) {
 	switch l.ch {
+	default:
+		if isLetter(l.ch) {
+			tok.Literal = l.readIdentifier()
+			return
+		} else {
+			tok = newToken(token.ILLEGAL, l.ch)
+		}
 	case '=':
 		tok = newToken(token.ASSIGN, l.ch)
 	case ';':
@@ -56,4 +63,17 @@ func (l *lexer) NextToken() (tok token.Token) {
 
 func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
+}
+
+func (l *lexer) readIdentifier() string {
+	position := l.position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+// 与えられた引数が英字かどうかを判別する
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'z' || ch <= '_'
 }
