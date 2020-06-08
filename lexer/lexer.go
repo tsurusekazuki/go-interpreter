@@ -27,15 +27,23 @@ func (l *lexer) readChar() {
 	l.readPosition += 1
 }
 
-func (l *lexer) NextToken() (tok token.Token) {
+func (l *lexer) NextToken() token.Token {
+
+	var tok token.Token
+	l.skipWhitespace()
 	switch l.ch {
-	//default:
-	//	if isLetter(l.ch) {
-	//		tok.Literal = l.readIdentifier()
-	//		return
-	//	} else {
-	//		tok = newToken(token.ILLEGAL, l.ch)
-	//	}
+	default:
+		if isLetter(l.ch) {
+			tok.Literal = l.readIdentifier()
+			tok.Type = token.LookupIdent(tok.Literal)
+			return tok
+		} else if isDigit(l.ch) {
+			tok.Type = token.INT
+			tok.Literal = l.readNumber()
+			return tok
+		} else {
+			tok = newToken(token.ILLEGAL, l.ch)
+		}
 	case '=':
 		tok = newToken(token.ASSIGN, l.ch)
 	case ';':
@@ -58,22 +66,40 @@ func (l *lexer) NextToken() (tok token.Token) {
 	}
 
 	l.readChar()
-	return
+	return tok
 }
 
 func newToken(tokenType token.TokenType, ch byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(ch)}
 }
-//
-//func (l *lexer) readIdentifier() string {
-//	position := l.position
-//	for isLetter(l.ch) {
-//		l.readChar()
-//	}
-//	return l.input[position:l.position]
-//}
-//
-//// 与えられた引数が英字かどうかを判別する
-//func isLetter(ch byte) bool {
-//	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'z' || ch <= '_'
-//}
+
+func (l *lexer) readIdentifier() string {
+	position := l.position
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+// 与えられた引数が英字かどうかを判別する
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
+}
+
+func (l *lexer) readNumber() string {
+	position := l.position
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	return l.input[position:l.position]
+}
+
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
+}
+
+func (l *lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
